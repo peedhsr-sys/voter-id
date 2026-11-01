@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>e-EPIC_Download</title>
+<title>e-EPIC_RKI3308188</title>
 <meta name="description" content="HTML version of Voter id.pdf — eEPIC, Election Commission of India, EPIC no. RKI3308188">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -94,88 +94,91 @@ svg.page {
   margin: 0;
 }
 
-/* Action Toolbar (Save, Print, Reset) */
+/* Compact Action Toolbar (Top-Right Corner) */
 .action-toolbar {
+  position: fixed;
+  top: 12px;
+  right: 14px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 22px;
-  width: 100%;
-  max-width: 1050px;
-  z-index: 100;
+  gap: 8px;
+  z-index: 9999;
 }
 
 .action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 24px;
+  gap: 5px;
+  padding: 5px 11px;
   font-family: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
   border: none;
   cursor: pointer;
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  transition: all 0.15s ease;
   user-select: none;
+  line-height: 1.2;
 }
 
 .action-btn svg {
   display: inline-block;
   vertical-align: middle;
+  width: 13px;
+  height: 13px;
 }
 
 .action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  opacity: 0.95;
 }
 
 .action-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
 .btn-save {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #059669;
 }
 .btn-save:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: #047857;
 }
 
 .btn-print {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: #2563eb;
 }
 .btn-print:hover {
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  background: #1d4ed8;
 }
 
 .btn-reset {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: #dc2626;
 }
 .btn-reset:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: #b91c1c;
 }
 
 /* Toast notification */
 .toast-notification {
   position: fixed;
-  bottom: 24px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%) translateY(100px);
-  background: #111827;
+  background: #1f2937;
   color: #ffffff;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 600;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   opacity: 0;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 9999;
+  transition: all 0.25s ease;
+  z-index: 99999;
   pointer-events: none;
 }
 
@@ -207,7 +210,7 @@ svg.page {
     height: auto !important;
     max-height: 100vh !important;
   }
-  .action-toolbar, .toast-notification, .card-inplace-input, input[type="file"] {
+  .action-toolbar, .action-btn, .toast-notification, .no-print, button, .card-inplace-input, input[type="file"] {
     display: none !important;
   }
 }
@@ -221,16 +224,16 @@ svg.page {
 
   <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
     <div class="action-toolbar no-print">
-    <button type="button" class="action-btn btn-save" onclick="saveCardData()" title="Save edits permanently in browser">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+    <button type="button" class="action-btn btn-save" onclick="saveCardData()" title="Save edits to LocalStorage">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
       <span>Save</span>
     </button>
-    <button type="button" class="action-btn btn-print" onclick="printCard()" title="Print card or Save as PDF">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+    <button type="button" class="action-btn btn-print" onclick="printCard()" title="Print card / Save as PDF">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
       <span>Print</span>
     </button>
     <button type="button" class="action-btn btn-reset" onclick="resetCardData()" title="Reset to default original state">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
       <span>Reset</span>
     </button>
   </div>
@@ -2184,7 +2187,7 @@ function showToast(message) {
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'save-toast';
-    toast.className = 'toast-notification';
+    toast.className = 'toast-notification no-print';
     document.body.appendChild(toast);
   }
   toast.textContent = message;
@@ -2192,7 +2195,7 @@ function showToast(message) {
   clearTimeout(toast._timer);
   toast._timer = setTimeout(function() {
     toast.classList.remove('show');
-  }, 2500);
+  }, 2200);
 }
 
 // Save all edited fields & photos to localStorage
@@ -2234,7 +2237,7 @@ function saveCardData() {
   
   try {
     localStorage.setItem('voter_card_saved_data', JSON.stringify(cardData));
-    showToast('डेटा सफलतापूर्वक सेव हो गया! (Saved to LocalStorage)');
+    showToast('डेटा सेव हो गया! (Saved)');
   } catch (err) {
     console.error('LocalStorage save error:', err);
     alert('डेटा सेव करने में त्रुटि: ' + err.message);
