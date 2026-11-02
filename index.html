@@ -142,6 +142,105 @@ svg.page {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
+
+.btn-import {
+  background: #7c3aed;
+}
+.btn-import:hover {
+  background: #6d28d9;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+}
+.modal-card {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 92%;
+  max-width: 520px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  font-family: inherit;
+  animation: modalAnim 0.2s ease-out;
+}
+@keyframes modalAnim {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.modal-header {
+  background: #7c3aed;
+  color: #ffffff;
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+}
+.modal-body {
+  padding: 16px 18px;
+}
+.modal-desc {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  color: #4b5563;
+  line-height: 1.4;
+}
+.modal-desc a {
+  color: #7c3aed;
+  font-weight: 600;
+  text-decoration: underline;
+}
+#importJsonInput {
+  width: 100%;
+  height: 130px;
+  box-sizing: border-box;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  resize: vertical;
+  outline: none;
+  background: #f9fafb;
+}
+#importJsonInput:focus {
+  border-color: #7c3aed;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+.modal-actions-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 .btn-save {
   background: #059669;
 }
@@ -2319,9 +2418,235 @@ function resetCardData() {
 }
 
 
+
+// ==========================================
+// ECI Voter JSON Auto-Import & Auto-Fill
+// ==========================================
+function openImportModal() {
+  const modal = document.getElementById('importModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    const input = document.getElementById('importJsonInput');
+    if (input) {
+      setTimeout(() => input.focus(), 50);
+    }
+  }
+}
+
+function closeImportModal() {
+  const modal = document.getElementById('importModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+async function pasteFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    const input = document.getElementById('importJsonInput');
+    if (input && text) {
+      input.value = text;
+      showToast('क्लिपबोर्ड से पेस्ट हो गया!');
+    }
+  } catch (err) {
+    showToast('Clipboard अनुमति नहीं मिली, सीधे Ctrl+V करें।');
+  }
+}
+
+function loadSampleData() {
+  const sample = [
+    {
+      "index": "national-electoral-display",
+      "content": {
+        "epicNumber": "RKI3308129",
+        "applicantFirstName": "Arshdeep",
+        "applicantLastName": "Pandey",
+        "applicantFirstNameL1": "अर्शदीप",
+        "applicantLastNameL1": "पाण्डेय",
+        "relationName": "Shirish",
+        "relationLName": "Pandey",
+        "relationNameL1": "शिरीष",
+        "relationLNameL1": "पाण्डेय",
+        "age": 20,
+        "gender": "M",
+        "asmblyName": "Rudrapur",
+        "asmblyNameL1": "रुद्रपुर",
+        "acNumber": 336,
+        "buildingAddress": "BADAHARA",
+        "buildingAddressL1": "बडहरा",
+        "districtValue": "Deoria",
+        "districtValueL1": "देवरिया",
+        "stateName": "Uttar Pradesh",
+        "stateNameL1": "उत्तर प्रदेश"
+      }
+    }
+  ];
+  const input = document.getElementById('importJsonInput');
+  if (input) {
+    input.value = JSON.stringify(sample, null, 2);
+  }
+}
+
+function applyImportedData() {
+  const input = document.getElementById('importJsonInput');
+  if (!input || !input.value.trim()) {
+    showToast('कृपया पहले JSON डेटा पेस्ट करें!');
+    return;
+  }
+  const success = importVoterData(input.value.trim(), true);
+  if (success) {
+    closeImportModal();
+  }
+}
+
+function importVoterData(rawInput, showNotification = true) {
+  try {
+    let parsed = rawInput;
+    if (typeof rawInput === 'string') {
+      parsed = JSON.parse(rawInput);
+    }
+    const item = Array.isArray(parsed) ? parsed[0] : parsed;
+    if (!item) throw new Error('Empty data');
+    const d = item.content || item;
+
+    // 1. EPIC Number & QR update
+    const epic = (d.epicNumber || d.epicId || d.epic || '').toString().trim().toUpperCase();
+    if (epic) {
+      updateEpicAndQR(epic);
+    }
+
+    // Helper to safely set text content
+    function setElText(id, text) {
+      const el = document.getElementById(id);
+      if (el && text !== undefined && text !== null && text !== '') {
+        el.textContent = text;
+        if (el.hasAttribute('textLength')) el.removeAttribute('textLength');
+        if (el.hasAttribute('lengthAdjust')) el.removeAttribute('lengthAdjust');
+      }
+    }
+
+    // 2. Name English & Hindi
+    const nameEn = (d.fullName || ((d.applicantFirstName || '') + ' ' + (d.applicantLastName || ''))).trim();
+    if (nameEn) setElText('txt-name-en', nameEn.toUpperCase());
+
+    const nameHi = (d.fullNameL1 || ((d.applicantFirstNameL1 || '') + ' ' + (d.applicantLastNameL1 || ''))).trim();
+    if (nameHi) setElText('txt-name-hi', nameHi);
+
+    // 3. Father / Relative Name English & Hindi
+    const relEn = (d.relativeFullName || ((d.relationName || '') + ' ' + (d.relationLName || ''))).trim();
+    if (relEn) setElText('txt-father-en', relEn.toUpperCase());
+
+    const relHi = (d.relativeFullNameL1 || ((d.relationNameL1 || '') + ' ' + (d.relationLNameL1 || ''))).trim();
+    if (relHi) setElText('txt-father-hi', relHi);
+
+    // 4. Gender
+    const gender = (d.gender || '').toString().trim().toUpperCase();
+    if (gender.startsWith('M')) {
+      setElText('txt-gender-hi', 'पुरुष /');
+      setElText('txt-gender-en', 'Male');
+    } else if (gender.startsWith('F')) {
+      setElText('txt-gender-hi', 'महिला /');
+      setElText('txt-gender-en', 'Female');
+    } else if (gender) {
+      setElText('txt-gender-hi', 'तृतीय लिंग /');
+      setElText('txt-gender-en', 'Third Gender');
+    }
+
+    // 5. DOB / Age
+    let dobVal = '';
+    if (d.dob) dobVal = d.dob;
+    else if (d.birthDate) dobVal = d.birthDate;
+    else if (d.age) dobVal = String(d.age);
+    else if (d.birthYear) dobVal = '01-01-' + d.birthYear;
+    if (dobVal) setElText('txt-dob', dobVal);
+
+    // 6. Assembly Constituency & ERO
+    const acNo = (d.acNumber || d.acNo || d.asmblyNo || '').toString().trim();
+    const acName = (d.asmblyName || '').trim();
+    const acNameL1 = (d.asmblyNameL1 || acName).trim();
+
+    if (acNo || acNameL1) {
+      const eroHi = acNo ? (acNo + ' - ' + acNameL1) : acNameL1;
+      setElText('txt-ero-hi', eroHi);
+    }
+    if (acNo) setElText('txt-ero-en-1', acNo + ' -');
+    if (acName) setElText('txt-ero-en-2', acName);
+
+    // 7. Address (Hindi & English)
+    const bldHi = d.buildingAddressL1 || d.buildingAddress || '';
+    const asmHi = d.asmblyNameL1 || d.asmblyName || '';
+    const distHi = d.districtValueL1 || d.districtValue || '';
+    const stHi = d.stateNameL1 || d.stateName || '';
+    const partsHi = [bldHi, asmHi, distHi, stHi].filter(Boolean);
+    if (partsHi.length > 0) {
+      setElText('txt-addr-hi-1', 'पता: 0, ' + partsHi.join(', ') + ' -');
+    }
+
+    const bldEn = (d.buildingAddress || '').toUpperCase();
+    const asmEn = (d.asmblyName || '').toUpperCase();
+    const distEn = (d.districtValue || '').toUpperCase();
+    const stEn = (d.stateName || '').toUpperCase();
+    if (bldEn || asmEn) {
+      setElText('txt-addr-en-1', 'Address: 0, ' + [bldEn, asmEn].filter(Boolean).join(', ') + ',');
+    }
+    if (distEn || stEn) {
+      setElText('txt-addr-en-2', [asmEn, distEn, stEn].filter(Boolean).join(', ') + ' -');
+    }
+
+    if (d.pinCode || d.pincode) {
+      const pinStr = (d.pinCode || d.pincode).toString();
+      setElText('txt-addr-hi-2', pinStr);
+      setElText('txt-addr-en-3', pinStr);
+    }
+
+    // 8. Auto-set Date to today
+    setElText('txt-date', getTodayFormattedDate());
+
+    // 9. Persist to localStorage
+    saveCardData();
+
+    if (showNotification) {
+      showToast('ECI डेटा सफलतापूर्वक लोड हुआ! (' + (epic || 'Done') + ')');
+    }
+    return true;
+  } catch (err) {
+    console.error('JSON Import Error:', err);
+    alert('अमान्य (Invalid) JSON डेटा! कृपया सही ECI डेटा पेस्ट करें।\nत्रुटि: ' + err.message);
+    return false;
+  }
+}
+
+// Check URL Hash or Query params for auto-fill on page load
+function checkUrlForVoterData() {
+  try {
+    const hash = window.location.hash;
+    if (hash && hash.includes('voterData=')) {
+      const raw = decodeURIComponent(hash.split('voterData=')[1]);
+      importVoterData(raw, true);
+      history.replaceState(null, null, ' ');
+      return;
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    const dataParam = urlParams.get('voterData');
+    if (dataParam) {
+      importVoterData(dataParam, true);
+    }
+  } catch (e) {
+    console.error('Error checking URL voter data:', e);
+  }
+}
+
+// Cross-tab / Extension postMessage receiver
+window.addEventListener('message', function(event) {
+  if (event.data && (event.data.type === 'FILL_VOTER_DATA' || event.data.action === 'fillVoterCard')) {
+    importVoterData(event.data.data || event.data.payload || event.data, true);
+  }
+});
+
 function initCard() {
   initEditableTexts();
   loadCardData();
+  checkUrlForVoterData();
   
   // Detect current EPIC number from card and initialize QR & filename
   const epicEl = document.getElementById('txt-epic-front') || document.querySelector('[data-type="epic"]');
@@ -2336,6 +2661,34 @@ if (document.readyState === 'loading') {
 }
 </script>
 
+
+
+  <!-- ECI Data Import Modal Dialog -->
+  <div id="importModal" class="modal-overlay no-print" style="display:none;" onclick="if(event.target===this)closeImportModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>📥 Import ECI Voter JSON</h3>
+        <button type="button" class="modal-close-btn" onclick="closeImportModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          ECI आधिकारिक पोर्टल (<a href="https://electoralsearch.eci.gov.in/" target="_blank" rel="noopener">Search in Electoral Roll</a>) से प्राप्त JSON डेटा यहाँ पेस्ट करें:
+        </p>
+        <textarea id="importJsonInput" placeholder='यहाँ ECI JSON पेस्ट करें... (उदा. [{"index":"national-electoral-display", "content": {...}}])'></textarea>
+        <div class="modal-actions-row">
+          <button type="button" class="action-btn" style="background:#4b5563;" onclick="pasteFromClipboard()" title="Paste from clipboard">
+            📋 Paste
+          </button>
+          <button type="button" class="action-btn" style="background:#0284c7;" onclick="loadSampleData()" title="Load test sample data">
+            ⚡ Sample
+          </button>
+          <button type="button" class="action-btn btn-import" style="flex:1;" onclick="applyImportedData()" title="Fill card and save">
+            ✓ Fill Card & Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>
