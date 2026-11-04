@@ -404,25 +404,7 @@ svg.page {
     <button type="button" class="action-btn btn-save" onclick="saveCardData()" title="Save edits to LocalStorage">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
 
-<!-- Interactive Relation Picker Modal Dropdown -->
-<div id="relationPickerModal" class="relation-picker-menu no-print" style="display:none;">
-  <div class="relation-picker-title">संबंध चुनें / Select Relation</div>
-  <div class="relation-option" data-type="husband" onclick="selectRelation('husband')">
-    <span class="relation-opt-icon">💍</span>
-    <span class="relation-opt-text"><strong>पति का नाम:</strong> / Husband's Name:</span>
-  </div>
-  <div class="relation-option" data-type="father" onclick="selectRelation('father')">
-    <span class="relation-opt-icon">👨</span>
-    <span class="relation-opt-text"><strong>पिता का नाम:</strong> / Father's Name:</span>
-  </div>
-  <div class="relation-divider"></div>
-  <div class="relation-option relation-opt-custom" onclick="editRelationCustom()">
-    <span class="relation-opt-icon">✏️</span>
-    <span class="relation-opt-text">कस्टम टेक्स्ट एडिट करें / Edit custom...</span>
-  </div>
-</div>
-
-      <span>Save</span>
+<span>Save</span>
     </button>
     <button type="button" class="action-btn btn-print" onclick="printCard()" title="Print card / Save as PDF">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -552,7 +534,25 @@ svg.page {
     <text x="407.000" y="244.970" font-family="Arial,'Liberation Sans',Helvetica,sans-serif" font-size="5.00" font-weight="400" fill="#000000" xml:space="preserve">https://ceouttarpradesh.nic.in/</text>
   </g>
 </svg>
+  
+  <!-- Interactive Relation Picker Modal Dropdown -->
+  <div id="relationPickerModal" class="relation-picker-menu no-print" style="display:none;" onclick="event.stopPropagation()">
+    <div class="relation-picker-title">संबंध चुनें / Select Relation</div>
+    <div class="relation-option" data-type="husband" onclick="selectRelation('husband', event)">
+      <span class="relation-opt-icon">💍</span>
+      <span class="relation-opt-text"><strong>पति का नाम:</strong> / Husband's Name:</span>
+    </div>
+    <div class="relation-option" data-type="father" onclick="selectRelation('father', event)">
+      <span class="relation-opt-icon">👨</span>
+      <span class="relation-opt-text"><strong>पिता का नाम:</strong> / Father's Name:</span>
+    </div>
+    <div class="relation-divider"></div>
+    <div class="relation-option relation-opt-custom" onclick="editRelationCustom(event)">
+      <span class="relation-opt-icon">✏️</span>
+      <span class="relation-opt-text">कस्टम टेक्स्ट एडिट करें / Edit custom...</span>
+    </div>
   </div>
+</div>
 </div>
 
 
@@ -2419,7 +2419,11 @@ function closeRelationPicker() {
   if (picker) picker.style.display = 'none';
 }
 
-function selectRelation(type) {
+function selectRelation(type, e) {
+  if (e) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
   const lblHi = document.getElementById('lbl-relation-hi');
   const lblEn = document.getElementById('lbl-relation-en');
   
@@ -2439,7 +2443,11 @@ function selectRelation(type) {
   saveCardData();
 }
 
-function editRelationCustom() {
+function editRelationCustom(e) {
+  if (e) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
   closeRelationPicker();
   const lblHi = document.getElementById('lbl-relation-hi');
   if (lblHi) {
@@ -2524,9 +2532,9 @@ function saveCardData() {
     photos: {}
   };
   
-  // Collect all editable texts by ID
+  // Collect all editable texts by ID (excluding relation toggle buttons)
   document.querySelectorAll('.editable-text').forEach(function(el) {
-    if (el.id) {
+    if (el.id && !el.classList.contains('relation-toggle-btn')) {
       cardData.texts[el.id] = el.textContent.trim();
     }
   });
